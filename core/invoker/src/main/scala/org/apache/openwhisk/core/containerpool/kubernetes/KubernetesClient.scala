@@ -128,6 +128,7 @@ case class KubernetesClientConfig(timeouts: KubernetesClientTimeoutConfig,
  */
 class KubernetesClient(
   config: KubernetesClientConfig = loadConfigOrThrow[KubernetesClientConfig](ConfigKeys.kubernetes),
+  istanceId: Int,
   testClient: Option[DefaultKubernetesClient] = None)(executionContext: ExecutionContext)(implicit log: Logging,
                                                                                           as: ActorSystem)
     extends KubernetesApi
@@ -152,7 +153,7 @@ class KubernetesClient(
           environment: Map[String, String] = Map.empty,
           labels: Map[String, String] = Map.empty)(implicit transid: TransactionId): Future[KubernetesContainer] = {
 
-    val (pod, pdb) = podBuilder.buildPodSpec(name, image, memory, environment, labels, config)
+    val (pod, pdb) = podBuilder.buildPodSpec(name, image, memory, environment, labels, config, istanceId)
     if (transid.meta.extraLogging) {
       log.info(this, s"Pod spec being created\n${Serialization.asYaml(pod)}")
     }

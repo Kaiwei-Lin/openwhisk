@@ -43,6 +43,7 @@ import org.apache.openwhisk.core.{ConfigKeys, WhiskConfig}
 class KubernetesContainerFactory(
   label: String,
   config: WhiskConfig,
+  istanceId: Int,
   containerArgsConfig: ContainerArgsConfig = loadConfigOrThrow[ContainerArgsConfig](ConfigKeys.containerArgs),
   runtimesRegistryConfig: RuntimesRegistryConfig =
     loadConfigOrThrow[RuntimesRegistryConfig](ConfigKeys.runtimesRegistry),
@@ -54,7 +55,7 @@ class KubernetesContainerFactory(
 
   private def initializeKubeClient(): KubernetesClient = {
     val config = loadConfigOrThrow[KubernetesClientConfig](ConfigKeys.kubernetes)
-    new KubernetesClient(config)(ec)
+    new KubernetesClient(config, istanceId)(ec)
   }
 
   /** Perform cleanup on init */
@@ -85,7 +86,9 @@ class KubernetesContainerFactory(
       userProvidedImage,
       memory,
       environment = Map("__OW_API_HOST" -> config.wskApiHost) ++ containerArgsConfig.extraEnvVarMap,
-      labels = Map("invoker" -> label, "release" -> KubernetesContainerFactoryProvider.release))
+      labels = Map("invoker" -> label, "release" -> KubernetesContainerFactoryProvider.release),
+      
+      )
   }
 }
 
@@ -99,5 +102,5 @@ object KubernetesContainerFactoryProvider extends ContainerFactoryProvider {
                         config: WhiskConfig,
                         instance: InvokerInstanceId,
                         parameters: Map[String, Set[String]]): ContainerFactory =
-    new KubernetesContainerFactory(s"invoker${instance.toInt}", config)(actorSystem, actorSystem.dispatcher, logging)
+    new KubernetesContainerFactory(s"invoker${instance.toInt}", config, instance.toInt)(actorSystem, actorSystem.dispatcher, logging)
 }

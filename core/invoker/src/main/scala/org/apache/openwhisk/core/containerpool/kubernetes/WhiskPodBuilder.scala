@@ -51,7 +51,8 @@ class WhiskPodBuilder(client: NamespacedKubernetesClient, config: KubernetesClie
     memory: ByteSize,
     environment: Map[String, String],
     labels: Map[String, String],
-    config: KubernetesClientConfig)(implicit transid: TransactionId): (Pod, Option[PodDisruptionBudget]) = {
+    config: KubernetesClientConfig,
+    istanceId: Int)(implicit transid: TransactionId): (Pod, Option[PodDisruptionBudget]) = {
     val envVars = environment.map {
       case (key, value) => new EnvVarBuilder().withName(key).withValue(value).build()
     }.toSeq ++ config.fieldRefEnvironment
@@ -90,7 +91,7 @@ class WhiskPodBuilder(client: NamespacedKubernetesClient, config: KubernetesClie
         .addNewMatchExpression()
         .withKey(config.userPodNodeAffinity.key)
         .withOperator("In")
-        .withValues(config.userPodNodeAffinity.value)
+        .withValues(config.userPodNodeAffinity.value + istanceId)
         .endMatchExpression()
         .endNodeSelectorTerm()
         .endRequiredDuringSchedulingIgnoredDuringExecution()
